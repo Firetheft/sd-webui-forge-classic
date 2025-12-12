@@ -1,0 +1,21 @@
+.stylez-lora-refresh {
+    background: transparent !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    margin-bottom: 8px !important;
+}
+
+.stylez-lora-refresh:hover {
+    cursor: pointer;
+}
+
+.lora-delete-btn {
+    margin-top: 24px !important;
+    height: 42px !important;
+    border-radius: 20% !important;
+}
+
+.lora-weight-slider {
+    margin-top: 24px !important;
+}
