@@ -40,13 +40,30 @@ def update_controlnet_filenames():
     global controlnet_filename_dict, controlnet_names
     controlnet_filename_dict = {"None": None}
 
-    ext_dirs = (
-        shared.opts.data.get("control_net_models_path", None),
-        getattr(shared.cmd_opts, "controlnet_dir", None),
-    )
-    extra_paths = (extra_path for extra_path in ext_dirs if extra_path is not None and os.path.exists(extra_path))
+    scan_paths = [controlnet_dir]
 
-    for path in [controlnet_dir, *extra_paths]:
+    opts_path = shared.opts.data.get("control_net_models_path", None)
+    if opts_path and os.path.exists(opts_path):
+        scan_paths.append(opts_path)
+
+    cmd_path = getattr(shared.cmd_opts, "controlnet_dir", None)
+    if cmd_path and os.path.exists(cmd_path):
+        scan_paths.append(cmd_path)
+
+    if getattr(shared.cmd_opts, 'forge_ref_comfy_home', None) is not None:
+        comfy_home = str(shared.cmd_opts.forge_ref_comfy_home)
+        
+        comfy_cnet = os.path.join(comfy_home, "models", "controlnet")
+        if os.path.exists(comfy_cnet) and comfy_cnet not in scan_paths:
+            scan_paths.append(comfy_cnet)
+            print(f"[ControlNet] Auto-mounting ComfyUI: {comfy_cnet}")
+
+        comfy_patches = os.path.join(comfy_home, "models", "model_patches")
+        if os.path.exists(comfy_patches) and comfy_patches not in scan_paths:
+            scan_paths.append(comfy_patches)
+            print(f"[ControlNet] Auto-mounting Patches: {comfy_patches}")
+
+    for path in scan_paths:
         found = get_all_models(path, "name")
         controlnet_filename_dict.update(found)
 

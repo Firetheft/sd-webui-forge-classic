@@ -1,9 +1,11 @@
 import re
+import os
 from functools import lru_cache
 
 from PIL import Image
 
 from modules import devices, errors, modelloader
+from modules import shared
 from modules.shared import opts
 from modules.upscaler import Upscaler, UpscalerData
 from modules.upscaler_utils import upscale_with_model
@@ -27,6 +29,22 @@ class UpscalerESRGAN(Upscaler):
         self.scalers = []
 
         model_paths = self.find_models(ext_filter=[".pt", ".pth", ".safetensors"])
+
+        if hasattr(shared.cmd_opts, 'forge_ref_comfy_home') and shared.cmd_opts.forge_ref_comfy_home:
+            comfy_home = str(shared.cmd_opts.forge_ref_comfy_home)
+            comfy_upscale = os.path.join(comfy_home, "models", "upscale_models")
+            
+            if os.path.exists(comfy_upscale):
+                print(f"[Upscaler] Importing ComfyUI models from: {comfy_upscale}")
+                comfy_models = modelloader.load_models(
+                    model_path=comfy_upscale,
+                    model_url=None,
+                    command_path=None,
+                    ext_filter=[".pt", ".pth", ".safetensors"],
+                )
+
+                model_paths.extend(comfy_models)
+
         if len(model_paths) == 0:
             scaler_data = UpscalerData(self.model_name, self.model_url, self, 4)
             self.scalers.append(scaler_data)
