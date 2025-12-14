@@ -82,6 +82,17 @@ def initialize_forge(startup_timer):
 
     from modules_forge.shared import diffusers_dir
 
+    from modules.paths_internal import models_path
+
+    if "TORCH_HOME" not in os.environ:
+        os.environ["TORCH_HOME"] = os.path.join(models_path, "torch")
+
+    if "INSIGHTFACE_HOME" not in os.environ:
+        os.environ["INSIGHTFACE_HOME"] = os.path.join(models_path, "insightface")
+
+    if "TIKTOKEN_CACHE_DIR" not in os.environ:
+        os.environ["TIKTOKEN_CACHE_DIR"] = os.path.join(models_path, "tiktoken")
+
     if "HF_HOME" not in os.environ:
         os.environ["HF_HOME"] = diffusers_dir
 
