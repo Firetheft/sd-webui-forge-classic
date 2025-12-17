@@ -16,7 +16,6 @@ class StylezLoraSelector(scripts.Script):
         
         def get_lora_data():
             names = ["None"]
-            
             try:
                 candidates = []
                 search_dirs = []
@@ -74,6 +73,8 @@ class StylezLoraSelector(scripts.Script):
         lora_list = get_lora_data()
 
         with gr.Accordion("LoRA Selector", open=False):
+            enabled = gr.Checkbox(label="Enable LoRA Selector", value=True)
+
             with gr.Row():
                 gr.Markdown("Select LoRA model and set weights")
                 refresh_btn = gr.Button("🔄 Refresh list", variant="secondary", size="sm", scale=0, min_width=100, elem_classes="stylez-lora-refresh")
@@ -81,6 +82,8 @@ class StylezLoraSelector(scripts.Script):
             for i in range(lora_count):
                 with gr.Row(variant="compact"): 
                     
+                    is_active = gr.Checkbox(label="Enable", value=True, min_width=60, scale=1, elem_classes="lora-enable")
+
                     model = gr.Dropdown(label=f"LoRA {i+1}", choices=lora_list, value="None", scale=10)
                     
                     weight = gr.Slider(label=f"weight {i+1}", minimum=-2.0, maximum=2.0, step=0.05, value=1.0, scale=4, elem_classes="lora-weight-slider")
@@ -88,11 +91,11 @@ class StylezLoraSelector(scripts.Script):
                     clear_btn = gr.Button("🗑️", variant="secondary", size="sm", min_width=40, scale=0.5, elem_classes="lora-delete-btn")
                     
                     def clear_slot():
-                        return "None", 1.0
+                        return True, "None", 1.0
                     
-                    clear_btn.click(fn=clear_slot, inputs=[], outputs=[model, weight])
+                    clear_btn.click(fn=clear_slot, inputs=[], outputs=[is_active, model, weight])
                     
-                    lora_ctrls.extend([model, weight])
+                    lora_ctrls.extend([is_active, model, weight])
 
             def refresh_callback():
                 try:
@@ -105,19 +108,28 @@ class StylezLoraSelector(scripts.Script):
                     pass
                 
                 new_list = get_lora_data()
+
                 return [gr.update(choices=new_list) for _ in range(lora_count)]
 
-            refresh_btn.click(fn=refresh_callback, inputs=[], outputs=lora_ctrls[0::2])
+            refresh_btn.click(fn=refresh_callback, inputs=[], outputs=lora_ctrls[1::3])
 
-        return lora_ctrls
+        return [enabled] + lora_ctrls
 
     def process(self, p, *args):
+        is_enabled = args[0]
+        
+        if not is_enabled:
+            return
+
+        lora_args = args[1:]
+        
         lora_tags = []
-        for i in range(0, len(args), 2):
-            model_name = args[i]
-            weight = args[i+1]
+        for i in range(0, len(lora_args), 3):
+            slot_active = lora_args[i]
+            model_name = lora_args[i+1]
+            weight = lora_args[i+2]
             
-            if model_name and model_name != "None":
+            if slot_active and model_name and model_name != "None":
                 
                 if "/" in model_name:
                     name_only = model_name.split("/")[-1]
